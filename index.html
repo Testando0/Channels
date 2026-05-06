@@ -3,58 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLVD | Live Streaming</title>
+    <title>TLVD | Studio Live</title>
     <style>
         :root {
-            --bg-color: #050505;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent-color: #0070f3; /* Azul Vercel */
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --accent: #0070f3; /* Vercel Blue */
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ededed;
+            --text-dim: #888;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
 
-        /* Container Principal */
-        .dashboard {
+        /* Header Estilo Dashboard */
+        header {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1100px;
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            background: rgba(0, 255, 100, 0.1);
+            color: #00ff64;
+            padding: 4px 10px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* Main Container */
+        .app-container {
+            width: 100%;
+            max-width: 1100px;
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns: 1fr 320px;
             gap: 20px;
         }
 
-        /* Stage do Player */
-        .player-stage {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        /* Player Stage */
+        .player-view {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
 
-        .iframe-wrapper {
+        .video-wrapper {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
-            overflow: hidden;
-            border-radius: 16px;
+            padding-top: 56.25%; /* 16:9 */
             background: #000;
+            border-radius: 14px;
+            overflow: hidden;
         }
 
-        .iframe-wrapper iframe {
+        .video-wrapper iframe {
             position: absolute;
             top: 0;
             left: 0;
@@ -63,146 +91,136 @@
             border: 0;
         }
 
-        /* Sidebar de Canais */
-        .channels-sidebar {
+        .info-bar {
+            padding: 15px 10px;
+        }
+
+        .info-bar h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        /* Sidebar de Canais (Glassmorphism) */
+        .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            height: 100%;
-            max-height: 600px;
-            overflow-y: auto;
-            padding-right: 5px;
+            gap: 10px;
         }
 
-        /* Custom Scrollbar */
-        .channels-sidebar::-webkit-scrollbar { width: 4px; }
-        .channels-sidebar::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
-
-        .channel-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            padding: 15px;
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 12px;
             border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
-        .channel-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
+        .card:hover {
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.06);
         }
 
-        .channel-card.active {
-            border-color: var(--accent-color);
+        .card.active {
+            border-color: var(--accent);
             background: rgba(0, 112, 243, 0.1);
         }
 
-        .channel-thumb {
-            width: 50px;
-            height: 50px;
-            background: #1a1a1a;
+        .thumb {
+            width: 45px;
+            height: 45px;
+            background: #111;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.8rem;
-            color: var(--accent-color);
+            font-size: 0.7rem;
+            color: var(--accent);
+            border: 1px solid var(--border);
         }
 
-        .channel-info h4 { margin: 0; font-size: 0.95rem; }
-        .channel-info p { margin: 5px 0 0; font-size: 0.75rem; color: var(--text-dim); }
+        .card-data h4 { margin: 0; font-size: 0.9rem; font-weight: 500; }
+        .card-data p { margin: 3px 0 0; font-size: 0.7rem; color: var(--text-dim); }
 
-        /* Responsividade Mobile */
-        @media (max-width: 900px) {
-            .dashboard { grid-template-columns: 1fr; }
-            .channels-sidebar { max-height: none; flex-direction: row; overflow-x: auto; padding-bottom: 10px; }
-            .channel-card { min-width: 160px; flex-direction: column; text-align: center; }
+        /* Mobile Layout */
+        @media (max-width: 850px) {
+            .app-container { grid-template-columns: 1fr; }
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            .card { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <header style="width: 100%; max-width: 1200px; margin-bottom: 30px;">
-        <h1 style="font-size: 1.5rem; letter-spacing: -1px;">TLVD <span style="color: var(--accent-color);">LIVE</span></h1>
+    <header>
+        <div class="logo">TLVD <span style="color: var(--accent);">STUDIO</span></div>
+        <div class="status-badge">● Engine Online</div>
     </header>
 
-    <main class="dashboard">
-        <section class="player-stage">
-            <div class="iframe-wrapper">
-                <iframe id="main-player" src="https://www.tdtchannels.com/embed/player.php?id=nick_pluto_br" allowfullscreen></iframe>
+    <main class="app-container">
+        <section class="player-view">
+            <div class="video-wrapper">
+                <iframe id="main-frame" src="https://pluto.tv/live-tv/nick-pluto-tv-ptv1/embed" allowfullscreen allow="autoplay"></iframe>
             </div>
-            <div style="padding: 20px 5px 5px;">
-                <h2 id="current-title" style="margin: 0; font-size: 1.2rem;">Nick Pluto TV</h2>
-                <p id="current-status" style="color: var(--accent-color); font-size: 0.8rem; font-weight: bold; margin-top: 8px;">● TRANSMITINDO AO VIVO</p>
+            <div class="info-bar">
+                <h2 id="channel-name">Nick Pluto TV</h2>
             </div>
         </section>
 
-        <aside class="channels-sidebar">
-            <div class="channel-card active" onclick="changeChannel('nick_pluto_br', 'Nick Pluto TV')">
-                <div class="channel-thumb">NICK</div>
-                <div class="channel-info">
-                    <h4>Nick Pluto TV</h4>
-                    <p>Infantil / Entretenimento</p>
-                </div>
+        <aside class="sidebar">
+            <div class="card active" onclick="change('https://pluto.tv/live-tv/nick-pluto-tv-ptv1/embed', 'Nick Pluto TV')">
+                <div class="thumb">NICK</div>
+                <div class="card-data"><h4>Nick Pluto TV</h4><p>Infantil</p></div>
             </div>
 
-            <div class="channel-card" onclick="changeChannel('record_news', 'Record News')">
-                <div class="channel-thumb">RN</div>
-                <div class="channel-info">
-                    <h4>Record News</h4>
-                    <p>Jornalismo 24h</p>
-                </div>
+            <div class="card" onclick="change('https://pluto.tv/live-tv/pluto-tv-cine-sucessos-br/embed', 'Cine Sucessos')">
+                <div class="thumb">CINE</div>
+                <div class="card-data"><h4>Cine Sucessos</h4><p>Filmes</p></div>
             </div>
 
-            <div class="channel-card" onclick="changeChannel('band', 'Rede Bandeirantes')">
-                <div class="channel-thumb">BAND</div>
-                <div class="channel-info">
-                    <h4>Band</h4>
-                    <p>Geral / Esportes</p>
-                </div>
+            <div class="card" onclick="change('https://www.youtube.com/embed/live_stream?channel=UCv998T_2Yy2D02V98fIe9aw', 'CNN Brasil')">
+                <div class="thumb">CNN</div>
+                <div class="card-data"><h4>CNN Brasil</h4><p>Notícias</p></div>
             </div>
 
-            <div class="channel-card" onclick="changeChannel('cnn_br', 'CNN Brasil')">
-                <div class="channel-thumb">CNN</div>
-                <div class="channel-info">
-                    <h4>CNN Brasil</h4>
-                    <p>Notícias / Política</p>
-                </div>
+            <div class="card" onclick="change('https://player.r7.com/video/i/5e3474324b4955315a000851', 'Record News')">
+                <div class="thumb">RECORD</div>
+                <div class="card-data"><h4>Record News</h4><p>Jornalismo</p></div>
             </div>
 
-            <div class="channel-card" onclick="changeChannel('rtp_1', 'RTP 1')">
-                <div class="channel-thumb">RTP1</div>
-                <div class="channel-info">
-                    <h4>RTP 1</h4>
-                    <p>Internacional (Portugal)</p>
-                </div>
+            <div class="card" onclick="change('https://tvcultura.com.br/aovivo/embed/', 'TV Cultura')">
+                <div class="thumb">CULT</div>
+                <div class="card-data"><h4>TV Cultura</h4><p>Educação</p></div>
             </div>
         </aside>
     </main>
 
     <script>
-        function changeChannel(id, name) {
-            // Atualiza o Iframe
-            const player = document.getElementById('main-player');
-            player.src = `https://www.tdtchannels.com/embed/player.php?id=${id}`;
+        function change(url, name) {
+            const frame = document.getElementById('main-frame');
+            const title = document.getElementById('channel-name');
             
-            // Atualiza Textos
-            document.getElementById('current-title').innerText = name;
+            // Troca o SRC e o Título
+            frame.src = url;
+            title.innerText = name;
 
-            // Atualiza Classe Ativa na Sidebar
-            document.querySelectorAll('.channel-card').forEach(card => {
-                card.classList.remove('active');
-            });
+            // Highlight no card selecionado
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
             event.currentTarget.classList.add('active');
 
-            // Scroll suave para o topo no mobile ao trocar canal
-            if(window.innerWidth < 900) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Scroll suave para o topo se estiver no mobile
+            if(window.innerWidth < 850) {
+                window.scrollTo({top: 0, behavior: 'smooth'});
             }
         }
     </script>
