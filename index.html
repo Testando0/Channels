@@ -3,72 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLVD | Native Engine</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>TLVD | Native Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
     <style>
-        :root { --bg: #000; --accent: #0070f3; --surface: #0a0a0a; --border: rgba(255,255,255,0.1); }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        
-        .stage { width: 95%; max-width: 1000px; margin-top: 20px; background: var(--surface); border-radius: 20px; padding: 10px; border: 1px solid var(--border); }
-        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; }
-        video { width: 100%; height: 100%; display: block; }
+        :root {
+            --bg: #050505;
+            --accent: #0070f3;
+            --surface: #0a0a0a;
+            --border: rgba(255,255,255,0.08);
+        }
 
-        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; width: 95%; max-width: 1000px; margin-top: 20px; }
-        .channel-item { background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .channel-item.active { border-color: var(--accent); background: rgba(0, 112, 243, 0.1); }
-        
-        .error-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 0.9rem; display: none; text-align: center; }
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-container {
+            width: 95%;
+            max-width: 900px;
+            margin-top: 30px;
+        }
+
+        /* Container do Player com efeito Glass */
+        #player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .channel-list {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding-bottom: 50px;
+        }
+
+        .btn-channel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #ccc;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .btn-channel:hover {
+            border-color: var(--accent);
+            background: rgba(0, 112, 243, 0.05);
+            color: #fff;
+        }
+
+        .btn-channel.active {
+            border-color: var(--accent);
+            background: rgba(0, 112, 243, 0.1);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        header { padding: 40px 0; text-align: center; width: 100%; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: 900; letter-spacing: -1.5px; font-size: 1.8rem; }
     </style>
 </head>
 <body>
 
-    <header style="padding: 20px;">
-        <div style="font-weight: 800; font-size: 1.2rem;">TLVD <span style="color: var(--accent);">PRO</span></div>
+    <header>
+        <div class="logo">TLVD <span style="color: var(--accent);">STREAMS</span></div>
     </header>
 
-    <div class="stage">
-        <div class="video-box">
-            <div id="error" class="error-msg">Fonte temporariamente offline ou bloqueio de CORS.</div>
-            <video id="video" controls autoplay playsinline></video>
+    <div class="main-container">
+        <div id="player"></div>
+
+        <div class="channel-list">
+            <div class="btn-channel active" onclick="changeChannel('https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8', this)">TV Cultura</div>
+            <div class="btn-channel" onclick="changeChannel('https://stream.ads.ottera.tv/playlist.m3u8?network_id=2116', this)">Record News</div>
+            <div class="btn-channel" onclick="changeChannel('https://amg01209-amg01209c1-plutotv-brazil-1.chila.amagi.tv/playlist.m3u8', this)">Nick (Pluto)</div>
+            <div class="btn-channel" onclick="changeChannel('https://linears-sbt-prd.edgio.net/linear/sbt/sbt-hd/sbt-hd.m3u8', this)">SBT HD</div>
         </div>
     </div>
 
-    <div class="channel-grid" id="grid">
-        <div class="channel-item active" onclick="play('https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8', this)">TV Cultura</div>
-        <div class="channel-item" onclick="play('https://stream.ads.ottera.tv/playlist.m3u8?network_id=2116', this)">Record News</div>
-        <div class="channel-item" onclick="play('https://temp-link.iptv-org.github.io/br_sbt.m3u8', this)">SBT (Public)</div>
-        <div class="channel-item" onclick="play('https://amg01209-amg01209c1-plutotv-brazil-1.chila.amagi.tv/playlist.m3u8', this)">Pluto TV Filme</div>
-    </div>
-
     <script>
-        const video = document.getElementById('video');
-        const errorMsg = document.getElementById('error');
-        let hls = new Hls();
-
-        function play(url, el) {
-            errorMsg.style.display = 'none';
-            document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
-            if(el) el.classList.add('active');
-
-            if (Hls.isSupported()) {
-                hls.destroy();
-                hls = new Hls({
-                    xhrSetup: function (xhr, url) {
-                        xhr.withCredentials = false; // Evita problemas de cookies/sessão
+        // Inicialização do Player
+        var player = new Clappr.Player({
+            source: 'https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8',
+            parentId: '#player',
+            width: '100%',
+            height: '100%',
+            autoPlay: true,
+            preload: 'auto',
+            playback: {
+                playInline: true,
+                hlsjsConfig: {
+                    // Aqui forçamos a limpeza de cache e ignoramos erros leves de CORS
+                    xhrSetup: function(xhr, url) {
+                        xhr.withCredentials = false;
                     }
-                });
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) errorMsg.style.display = 'block';
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
+                }
             }
-        }
+        });
 
-        // Auto-play no load
-        window.onload = () => play('https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8');
+        function changeChannel(url, el) {
+            // UI
+            document.querySelectorAll('.btn-channel').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            // Troca o Source no Clappr de forma nativa
+            player.load(url);
+            player.play();
+        }
     </script>
 </body>
 </html>
