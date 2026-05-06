@@ -3,226 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLVD | Studio Live</title>
+    <title>TLVD | Native Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
-            --bg: #000000;
+            --bg: #000;
+            --accent: #0070f3;
             --surface: #0a0a0a;
-            --accent: #0070f3; /* Vercel Blue */
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #ededed;
-            --text-dim: #888;
+            --border: rgba(255,255,255,0.1);
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Header Estilo Dashboard */
-        header {
+        /* Container do Player */
+        .stage {
             width: 100%;
-            max-width: 1100px;
-            padding: 20px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 25px;
-        }
-
-        .logo {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        .status-badge {
-            font-size: 0.7rem;
-            background: rgba(0, 255, 100, 0.1);
-            color: #00ff64;
-            padding: 4px 10px;
-            border-radius: 100px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        /* Main Container */
-        .app-container {
-            width: 100%;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 20px;
-        }
-
-        /* Player Stage */
-        .player-view {
+            max-width: 1000px;
+            margin-top: 20px;
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 10px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .video-wrapper {
+        .video-box {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 */
+            aspect-ratio: 16/9;
             background: #000;
-            border-radius: 14px;
+            border-radius: 16px;
             overflow: hidden;
         }
 
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+        video {
             width: 100%;
             height: 100%;
-            border: 0;
+            display: block;
         }
 
-        .info-bar {
-            padding: 15px 10px;
-        }
-
-        .info-bar h2 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text);
-        }
-
-        /* Sidebar de Canais (Glassmorphism) */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
+        /* Grid de Canais */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 12px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 30px;
+            padding: 0 10px 50px;
         }
 
-        .card:hover {
+        .channel-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .channel-item:hover {
             border-color: var(--accent);
-            background: rgba(255,255,255,0.06);
+            background: rgba(0, 112, 243, 0.05);
         }
 
-        .card.active {
+        .channel-item.active {
             border-color: var(--accent);
             background: rgba(0, 112, 243, 0.1);
-        }
-
-        .thumb {
-            width: 45px;
-            height: 45px;
-            background: #111;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.7rem;
             color: var(--accent);
-            border: 1px solid var(--border);
         }
 
-        .card-data h4 { margin: 0; font-size: 0.9rem; font-weight: 500; }
-        .card-data p { margin: 3px 0 0; font-size: 0.7rem; color: var(--text-dim); }
+        .channel-item h4 { margin: 0; font-size: 0.85rem; font-weight: 600; }
 
-        /* Mobile Layout */
-        @media (max-width: 850px) {
-            .app-container { grid-template-columns: 1fr; }
-            .sidebar {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-            .card { flex-direction: column; text-align: center; }
-        }
+        header { padding: 30px 0; width: 100%; text-align: center; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: 800; letter-spacing: -1px; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">TLVD <span style="color: var(--accent);">STUDIO</span></div>
-        <div class="status-badge">● Engine Online</div>
+        <div class="logo">TLVD <span style="color: var(--accent);">NATIVE</span></div>
     </header>
 
-    <main class="app-container">
-        <section class="player-view">
-            <div class="video-wrapper">
-                <iframe id="main-frame" src="https://pluto.tv/live-tv/nick-pluto-tv-ptv1/embed" allowfullscreen allow="autoplay"></iframe>
-            </div>
-            <div class="info-bar">
-                <h2 id="channel-name">Nick Pluto TV</h2>
-            </div>
-        </section>
+    <div class="stage">
+        <div class="video-box">
+            <video id="video" controls autoplay playsinline></video>
+        </div>
+    </div>
 
-        <aside class="sidebar">
-            <div class="card active" onclick="change('https://pluto.tv/live-tv/nick-pluto-tv-ptv1/embed', 'Nick Pluto TV')">
-                <div class="thumb">NICK</div>
-                <div class="card-data"><h4>Nick Pluto TV</h4><p>Infantil</p></div>
-            </div>
-
-            <div class="card" onclick="change('https://pluto.tv/live-tv/pluto-tv-cine-sucessos-br/embed', 'Cine Sucessos')">
-                <div class="thumb">CINE</div>
-                <div class="card-data"><h4>Cine Sucessos</h4><p>Filmes</p></div>
-            </div>
-
-            <div class="card" onclick="change('https://www.youtube.com/embed/live_stream?channel=UCv998T_2Yy2D02V98fIe9aw', 'CNN Brasil')">
-                <div class="thumb">CNN</div>
-                <div class="card-data"><h4>CNN Brasil</h4><p>Notícias</p></div>
-            </div>
-
-            <div class="card" onclick="change('https://player.r7.com/video/i/5e3474324b4955315a000851', 'Record News')">
-                <div class="thumb">RECORD</div>
-                <div class="card-data"><h4>Record News</h4><p>Jornalismo</p></div>
-            </div>
-
-            <div class="card" onclick="change('https://tvcultura.com.br/aovivo/embed/', 'TV Cultura')">
-                <div class="thumb">CULT</div>
-                <div class="card-data"><h4>TV Cultura</h4><p>Educação</p></div>
-            </div>
-        </aside>
-    </main>
+    <div class="channel-grid">
+        <div class="channel-item active" onclick="playChannel('https://service-stitcher.clusters.pluto.tv/stitch/v1/master/playlist.m3u8?channel_id=5f3303f56a593300076a5996&deviceType=web&deviceMake=chrome', this)">
+            <h4>Nick Pluto TV</h4>
+        </div>
+        <div class="channel-item" onclick="playChannel('https://service-stitcher.clusters.pluto.tv/stitch/v1/master/playlist.m3u8?channel_id=5e69317500171a00075d9e5b&deviceType=web', this)">
+            <h4>Cine Sucessos</h4>
+        </div>
+        <div class="channel-item" onclick="playChannel('https://stream.ads.ottera.tv/playlist.m3u8?network_id=2116', this)">
+            <h4>Record News</h4>
+        </div>
+        <div class="channel-item" onclick="playChannel('https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8', this)">
+            <h4>TV Cultura</h4>
+        </div>
+    </div>
 
     <script>
-        function change(url, name) {
-            const frame = document.getElementById('main-frame');
-            const title = document.getElementById('channel-name');
-            
-            // Troca o SRC e o Título
-            frame.src = url;
-            title.innerText = name;
+        const video = document.getElementById('video');
+        let hls = new Hls();
 
-            // Highlight no card selecionado
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        function playChannel(url, element) {
+            // UI Update
+            document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
 
-            // Scroll suave para o topo se estiver no mobile
-            if(window.innerWidth < 850) {
-                window.scrollTo({top: 0, behavior: 'smooth'});
+            // HLS Logic
+            if (Hls.isSupported()) {
+                hls.destroy(); // Limpa a instância anterior para não dar lag
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } 
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => video.play());
             }
         }
+
+        // Inicia com o primeiro canal
+        window.onload = () => {
+            const firstChannel = document.querySelector('.channel-item');
+            playChannel('https://service-stitcher.clusters.pluto.tv/stitch/v1/master/playlist.m3u8?channel_id=5f3303f56a593300076a5996&deviceType=web', firstChannel);
+        };
     </script>
 </body>
 </html>
