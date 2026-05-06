@@ -3,125 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLVD | Native Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    <title>TLVD | Studio Native</title>
     <style>
         :root {
             --bg: #050505;
             --accent: #0070f3;
             --surface: #0a0a0a;
-            --border: rgba(255,255,255,0.08);
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.03);
         }
 
         body {
-            background: var(--bg);
+            background-color: var(--bg);
             color: #fff;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .main-container {
-            width: 95%;
-            max-width: 900px;
-            margin-top: 30px;
-        }
-
-        /* Container do Player com efeito Glass */
-        #player {
+        /* Container do Player */
+        .stage {
             width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 20px;
-            overflow: hidden;
+            max-width: 960px;
+            background: var(--surface);
+            border-radius: 24px;
             border: 1px solid var(--border);
+            padding: 12px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
         }
 
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 */
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Lista de Canais Profissional */
         .channel-list {
             margin-top: 25px;
+            width: 100%;
+            max-width: 960px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
-            padding-bottom: 50px;
         }
 
-        .btn-channel {
-            background: var(--surface);
+        .channel-card {
+            background: var(--glass);
             border: 1px solid var(--border);
-            color: #ccc;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 16px;
             cursor: pointer;
-            font-size: 0.8rem;
             transition: 0.3s;
             text-align: center;
         }
 
-        .btn-channel:hover {
+        .channel-card:hover {
             border-color: var(--accent);
             background: rgba(0, 112, 243, 0.05);
-            color: #fff;
         }
 
-        .btn-channel.active {
+        .channel-card.active {
             border-color: var(--accent);
             background: rgba(0, 112, 243, 0.1);
-            color: var(--accent);
             font-weight: bold;
         }
 
-        header { padding: 40px 0; text-align: center; width: 100%; border-bottom: 1px solid var(--border); }
-        .logo { font-weight: 900; letter-spacing: -1.5px; font-size: 1.8rem; }
+        .channel-card h4 { margin: 0; font-size: 0.85rem; letter-spacing: 0.5px; }
+
+        header { padding: 30px 0; text-align: center; }
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: -1px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">TLVD <span style="color: var(--accent);">STREAMS</span></div>
+        <div class="logo">TLVD <span style="color: var(--accent);">TV</span></div>
     </header>
 
-    <div class="main-container">
-        <div id="player"></div>
+    <main class="stage">
+        <div class="video-container">
+            <iframe id="tv-player" src="https://www.tdtchannels.com/embed/player.php?id=nick_pluto_br" allowfullscreen allow="autoplay; fullscreen"></iframe>
+        </div>
+    </main>
 
-        <div class="channel-list">
-            <div class="btn-channel active" onclick="changeChannel('https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8', this)">TV Cultura</div>
-            <div class="btn-channel" onclick="changeChannel('https://stream.ads.ottera.tv/playlist.m3u8?network_id=2116', this)">Record News</div>
-            <div class="btn-channel" onclick="changeChannel('https://amg01209-amg01209c1-plutotv-brazil-1.chila.amagi.tv/playlist.m3u8', this)">Nick (Pluto)</div>
-            <div class="btn-channel" onclick="changeChannel('https://linears-sbt-prd.edgio.net/linear/sbt/sbt-hd/sbt-hd.m3u8', this)">SBT HD</div>
+    <div class="channel-list">
+        <div class="channel-card active" onclick="change('nick_pluto_br', this)">
+            <h4>Nick Pluto TV</h4>
+        </div>
+        <div class="channel-card" onclick="change('record_news', this)">
+            <h4>Record News</h4>
+        </div>
+        <div class="channel-card" onclick="change('band', this)">
+            <h4>Band</h4>
+        </div>
+        <div class="channel-card" onclick="change('sbt', this)">
+            <h4>SBT</h4>
+        </div>
+        <div class="channel-card" onclick="change('cnn_br', this)">
+            <h4>CNN Brasil</h4>
+        </div>
+        <div class="channel-card" onclick="change('tvcultura', this)">
+            <h4>TV Cultura</h4>
         </div>
     </div>
 
     <script>
-        // Inicialização do Player
-        var player = new Clappr.Player({
-            source: 'https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8',
-            parentId: '#player',
-            width: '100%',
-            height: '100%',
-            autoPlay: true,
-            preload: 'auto',
-            playback: {
-                playInline: true,
-                hlsjsConfig: {
-                    // Aqui forçamos a limpeza de cache e ignoramos erros leves de CORS
-                    xhrSetup: function(xhr, url) {
-                        xhr.withCredentials = false;
-                    }
-                }
-            }
-        });
+        function change(id, el) {
+            // Troca o canal no iframe de forma estável
+            const player = document.getElementById('tv-player');
+            player.src = `https://www.tdtchannels.com/embed/player.php?id=${id}`;
 
-        function changeChannel(url, el) {
-            // UI
-            document.querySelectorAll('.btn-channel').forEach(b => b.classList.remove('active'));
+            // Atualiza UI
+            document.querySelectorAll('.channel-card').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
 
-            // Troca o Source no Clappr de forma nativa
-            player.load(url);
-            player.play();
+            // Feedback visual e scroll mobile
+            if(window.innerWidth < 800) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
     </script>
 </body>
