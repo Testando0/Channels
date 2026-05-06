@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Nativo - Nick Pluto TV</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            background-color: #0f0f0f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+        }
+        .video-container {
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #000;
+            border: 1px solid #333;
+        }
+        video {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="video-container">
+    <video id="video" controls autoplay playsinline></video>
+</div>
+
+<script>
+    // Link direto do fluxo HLS da Nick Pluto TV
+    const videoSrc = "https://service-stitcher.clusters.pluto.tv/stitch/v1/master/playlist.m3u8?advertisingId=&appName=web&appVersion=unknown&appStoreUrl=&architecture=&buildVersion=&clientTime=0&deviceDNT=0&deviceId=1f7c8f20-1d8e-11ef-93e1-0949d282928d&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=unknown&includeExtendedEvents=false&sid=5c6218d8-746a-493e-b873-19543e809315&userId=&serverSideAds=true&channel_id=5f3303f56a593300076a5996";
+
+    const video = document.getElementById('video');
+
+    if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+        });
+    } 
+    // Suporte nativo para Safari/iOS
+    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+        video.addEventListener('loadedmetadata', function() {
+            video.play();
+        });
+    }
+</script>
+
+</body>
+</html>
